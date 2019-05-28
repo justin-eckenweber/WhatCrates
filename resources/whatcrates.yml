@@ -1,0 +1,13 @@
+# WhatCrate Config
+# Available placeholders: {USERNAME} {CRATE}
+
+whatcrates:
+  bronze:
+    world: world
+    x: 0
+    y: 0
+    z: 0
+    key: bronze
+    rewards:
+      - "cmd:1000$:givemoney {USERNAME} 1000"
+      - "item:10x Diamonds:264:0:10"
