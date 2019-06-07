@@ -59,6 +59,12 @@ class Main extends PluginBase {
         foreach ($this->crates as $whatcrate) {
             if($whatcrate instanceof WhatCrate) {
                 $text = $whatcrate->getFloatingText();
+                $keys = $this->getKeysOfPlayer($player, $whatcrate->getKey());
+                if($keys > 0) {
+                    $text->setTitle($whatcrate->getName() . " (" . $keys . ")");
+                } else {
+                    $text->setTitle($whatcrate->getName());
+                }
                 if($text instanceof FloatingTextParticle) {
                     foreach ($text->encode() as $pckg) {
                         $text->setInvisible(false);
@@ -107,7 +113,6 @@ class Main extends PluginBase {
             return $player->sendMessage("§cYou don't have a key for this WhatCrate.");
         }
         $this->removeKeysOfPlayer($player, $whatCrate->getKey(), 1);
-        // ToDo: Make spinningTimes and speed editable in config.
         $this->getScheduler()->scheduleRepeatingTask(new WhatCrateRaffle($this, $player, intval($this->getConfig()->get("spinning-times")), $whatCrate), intval($this->getConfig()->get("raffle-speed")));
     }
 

@@ -68,6 +68,7 @@ class WhatCratesCommand extends Command {
                     if($this->plugin->getServer()->getPlayer($player)) {
                         $pplayer = $this->plugin->getServer()->getPlayer($args[2]);
                         $this->plugin->addKeysToPlayer($pplayer, $type, intval($amount));
+                        $this->plugin->sendFloatingText($pplayer);
                         $pplayer->sendMessage("You've received x$amount $type Keys.");
                         $sender->sendMessage("You gave ".$pplayer->getName()." x$amount $type Keys.");
                     }
