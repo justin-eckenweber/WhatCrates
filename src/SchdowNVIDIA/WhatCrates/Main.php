@@ -21,7 +21,13 @@ declare(strict_types = 1);
 
 namespace SchdowNVIDIA\WhatCrates;
 
+use pocketmine\command\ConsoleCommandSender;
+use pocketmine\item\Item;
+use pocketmine\level\particle\LavaParticle;
+use pocketmine\level\particle\PortalParticle;
+use pocketmine\level\sound\BlazeShootSound;
 use pocketmine\level\sound\Sound;
+use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
@@ -81,10 +87,48 @@ class Main extends PluginBase {
             return $player->sendMessage("§cYou don't have a key for this WhatCrate.");
         }
         $this->removeKeysOfPlayer($player, $whatCrate->getKey(), 1);
-        $rewards = $whatCrate->getRewards();
-        $reward = array_rand($whatCrate->getRewards());
-        $player->sendMessage("You've won: ".$rewards[$reward]);
-        $whatCrate->setOpen(false);
+        // ToDo: Make spinningTimes and speed editable in config.
+        $this->getScheduler()->scheduleRepeatingTask(new WhatCrateRaffle($this, $player,8, $whatCrate), 10);
+        //$rewards = $whatCrate->getRewards();
+        //$reward = array_rand($whatCrate->getRewards());
+
+        //$level = $this->getServer()->getLevelByName($whatCrate->getWorld());
+
+        /*for($i = 0; $i < 30; $i++) {
+            $px = (float) $whatCrate->getX() + ($i / 10);
+            $py = (float) $whatCrate->getY() + ($i / 10);
+            $pz = (float) $whatCrate->getZ() + ($i / 10);
+            $level->addParticle(new PortalParticle(new Vector3($px, $py, $pz)));
+        }*/
+
+        //$player->sendMessage("You've won: ".$rewards[$reward]);
+        //$level->addSound(new BlazeShootSound($player->asVector3()));
+        //$whatCrate->setOpen(false);
+    }
+
+    public function rewardPlayer(Player $player, string $reward, WhatCrate $whatCrate) {
+        $rwd = explode(":", $reward);
+        switch ($rwd[0]) {
+            case "cmd":
+                $player->sendMessage("§fHooray! You've won: §b" . $rwd[1] . "§f!");
+                $this->getServer()->dispatchCommand(new ConsoleCommandSender(), $this->replaceRewardPlaceholders($rwd[2], $player, $whatCrate));
+                break;
+
+            case "item":
+                $player->sendMessage("§fHooray! You've won: §b" . $rwd[1] . "§f!");
+                $player->getInventory()->addItem(Item::get(intval($rwd[2]), intval($rwd[3]), intval($rwd[4])));
+                break;
+
+            default:
+                $player->sendMessage("Invalid reward type! ($rwd[0]) ($reward)");
+                break;
+        }
+    }
+
+    public function replaceRewardPlaceholders(string $string, Player $player, WhatCrate $whatCrate) {
+        $string = str_replace("{USERNAME}", $player->getName(), $string);
+        $string = str_replace("{CRATE}", $whatCrate->getName(), $string);
+        return $string;
     }
 
     public function getKeysOfPlayer(Player $player, string $key) {

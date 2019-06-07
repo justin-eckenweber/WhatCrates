@@ -38,15 +38,36 @@ class WhatCratesCommand extends Command {
 
     public function execute(CommandSender $sender, string $commandLabel, array $args)
     {
-        if($sender instanceof Player) {
-            if ($sender->hasPermission("whatcrates")) {
-                $this->plugin->openWhatCratesMenu($sender);
-        } else {
-                $sender->sendMessage("§cYou're not allowed to use that!");
-            }
-        } else {
-            $sender->sendMessage("§cRun this command in-game!");
+        if(!isset($args[0])) {
+            return;
         }
+        switch ($args[0]) {
+            case "ui":
+              if ($sender instanceof Player) {
+              if ($sender->hasPermission("whatcrates")) {
+                  $this->plugin->openWhatCratesMenu($sender);
+              } else {
+                  $sender->sendMessage("§cYou're not allowed to use that!");
+              }
+              } else {
+                  $sender->sendMessage("§cYou can use the UI only in-game!");
+              }
+        break;
+            case "key":
+                if($args[1] === "give") {
+                 //   if($args)
+                    // continue here
+                } else if ($args[1] === "remove") {
+
+                } else {
+                    $sender->sendMessage("§cWrong Syntax! Use: §f/key give/remove playername amount");
+                }
+                break;
+            default:
+
+                break;
     }
+    }
+
 
 }
