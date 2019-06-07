@@ -23,6 +23,7 @@ namespace SchdowNVIDIA\WhatCrates;
 use pocketmine\block\Block;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
+use pocketmine\event\player\PlayerJoinEvent;
 
 class EventListener implements Listener {
 
@@ -31,6 +32,10 @@ class EventListener implements Listener {
     public function __construct(Main $plugin)
     {
         $this->plugin = $plugin;
+    }
+
+    public function onJoin(PlayerJoinEvent $event) {
+        $this->plugin->sendFloatingText($event->getPlayer());
     }
 
     public function onInteract(PlayerInteractEvent $event)

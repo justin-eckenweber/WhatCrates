@@ -20,6 +20,9 @@ declare(strict_types = 1);
 
 namespace SchdowNVIDIA\WhatCrates;
 
+use pocketmine\level\particle\FloatingTextParticle;
+use pocketmine\math\Vector3;
+
 class WhatCrate {
 
     private $posX;
@@ -30,8 +33,9 @@ class WhatCrate {
     private $rewards;
     private $key;
     private $open;
+    private $floatingText;
 
-    public function __construct(string $posX, string $posY, string $posZ, string $world, string $name, array $rewards, string $key)
+    public function __construct(string $posX, string $posY, string $posZ, string $world, string $name, array $rewards, string $key, FloatingTextParticle $floatingText)
     {
         $this->posX = $posX;
         $this->posY = $posY;
@@ -41,6 +45,7 @@ class WhatCrate {
         $this->rewards = $rewards;
         $this->key = $key;
         $this->open = false;
+        $this->floatingText = $floatingText;
     }
 
     public function getX() {
@@ -63,6 +68,10 @@ class WhatCrate {
         return (string) $this->world.":".$this->posX.":".$this->posY.":".$this->posZ;
     }
 
+    public function getVector3() {
+        return new Vector3(intval($this->posX), intval($this->posY), intval($this->getZ()));
+    }
+
     public function getName() {
         return (string) $this->name;
     }
@@ -81,6 +90,16 @@ class WhatCrate {
 
     public function setOpen(bool $isOpen) {
         $this->open = $isOpen;
+    }
+
+    public function getFloatingText(): FloatingTextParticle
+    {
+        return $this->floatingText;
+    }
+
+    public function setFloatingText(FloatingTextParticle $floatingText): void
+    {
+        $this->floatingText = $floatingText;
     }
 
 }

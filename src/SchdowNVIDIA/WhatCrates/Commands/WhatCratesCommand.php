@@ -39,7 +39,10 @@ class WhatCratesCommand extends Command {
     public function execute(CommandSender $sender, string $commandLabel, array $args)
     {
         if(!isset($args[0])) {
-            return;
+            return true;
+        }
+        if (!$sender->hasPermission("whatcrates")) {
+            return $sender->sendMessage("§cYou're not allowed to use that!");
         }
         switch ($args[0]) {
             case "ui":
@@ -54,13 +57,24 @@ class WhatCratesCommand extends Command {
               }
         break;
             case "key":
+                if(!isset($args[1])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
                 if($args[1] === "give") {
-                 //   if($args)
-                    // continue here
+                    if(!isset($args[2])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
+                    if(!isset($args[3])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
+                    if(!isset($args[4])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
+                    $player = $args[2];
+                    $type = $args[3];
+                    $amount = $args[4];
+                    if($this->plugin->getServer()->getPlayer($player)) {
+                        $pplayer = $this->plugin->getServer()->getPlayer($args[2]);
+                        $this->plugin->addKeysToPlayer($pplayer, $type, intval($amount));
+                        $pplayer->sendMessage("You've received x$amount $type Keys.");
+                        $sender->sendMessage("You gave ".$pplayer->getName()." x$amount $type Keys.");
+                    }
                 } else if ($args[1] === "remove") {
-
+                    return true;
                 } else {
-                    $sender->sendMessage("§cWrong Syntax! Use: §f/key give/remove playername amount");
+                    $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
                 }
                 break;
             default:

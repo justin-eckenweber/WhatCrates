@@ -1,0 +1,11 @@
+# WhatCrates Config
+# !! Do not change the version !!
+version: 0
+
+# WhatCrates Raffle
+# Lower = Faster, Higher = Slower
+raffle-speed: 10
+# How many times should it spin?
+spinning-times: 8
+
+

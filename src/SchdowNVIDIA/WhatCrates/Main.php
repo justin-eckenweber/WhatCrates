@@ -23,16 +23,19 @@ namespace SchdowNVIDIA\WhatCrates;
 
 use pocketmine\command\ConsoleCommandSender;
 use pocketmine\item\Item;
+use pocketmine\level\particle\FloatingTextParticle;
 use pocketmine\level\particle\LavaParticle;
 use pocketmine\level\particle\PortalParticle;
+use pocketmine\level\Position;
 use pocketmine\level\sound\BlazeShootSound;
 use pocketmine\level\sound\Sound;
 use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\plugin\PluginBase;
 use pocketmine\utils\Config;
+use pocketmine\utils\TextFormat;
 use SchdowNVIDIA\WhatCrates\Commands\WhatCratesCommand;
-use SchdowNVIDIA\WhatCrates\Libs\jojoe77777\FormAPI\SimpleForm;
+use jojoe77777\FormAPI\SimpleForm;
 
 class Main extends PluginBase {
 
@@ -49,6 +52,21 @@ class Main extends PluginBase {
         $this->initWhatCrates();
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
         $this->getServer()->getCommandMap()->register("whatcrates", new WhatCratesCommand($this));
+        $this->keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
+    }
+
+    public function sendFloatingText(Player $player) {
+        foreach ($this->crates as $whatcrate) {
+            if($whatcrate instanceof WhatCrate) {
+                $text = $whatcrate->getFloatingText();
+                if($text instanceof FloatingTextParticle) {
+                    foreach ($text->encode() as $pckg) {
+                        $text->setInvisible(false);
+                        $player->dataPacket($pckg);
+                    }
+                }
+            }
+        }
     }
 
     public function initWhatCrates()
@@ -64,8 +82,10 @@ class Main extends PluginBase {
             $name = (string) $whatcrate;
             $rewards = $attribute["rewards"];
             $key = $attribute["key"];
+            $textPos = new Vector3(intval($x) + 0.5, intval($y) + 1, intval($z) + 0.5);
+            $floatingText = new FloatingTextParticle($textPos, '', $name, TextFormat::RESET);
 
-            array_push($this->crates, new WhatCrate($x, $y, $z, $world, $name, $rewards, $key));
+            array_push($this->crates, new WhatCrate($x, $y, $z, $world, $name, $rewards, $key, $floatingText));
             if(!in_array($world, $this->worldsWithWhatCrates)) {
                 array_push($this->worldsWithWhatCrates, $world);
             }
@@ -88,22 +108,7 @@ class Main extends PluginBase {
         }
         $this->removeKeysOfPlayer($player, $whatCrate->getKey(), 1);
         // ToDo: Make spinningTimes and speed editable in config.
-        $this->getScheduler()->scheduleRepeatingTask(new WhatCrateRaffle($this, $player,8, $whatCrate), 10);
-        //$rewards = $whatCrate->getRewards();
-        //$reward = array_rand($whatCrate->getRewards());
-
-        //$level = $this->getServer()->getLevelByName($whatCrate->getWorld());
-
-        /*for($i = 0; $i < 30; $i++) {
-            $px = (float) $whatCrate->getX() + ($i / 10);
-            $py = (float) $whatCrate->getY() + ($i / 10);
-            $pz = (float) $whatCrate->getZ() + ($i / 10);
-            $level->addParticle(new PortalParticle(new Vector3($px, $py, $pz)));
-        }*/
-
-        //$player->sendMessage("You've won: ".$rewards[$reward]);
-        //$level->addSound(new BlazeShootSound($player->asVector3()));
-        //$whatCrate->setOpen(false);
+        $this->getScheduler()->scheduleRepeatingTask(new WhatCrateRaffle($this, $player, intval($this->getConfig()->get("spinning-times")), $whatCrate), intval($this->getConfig()->get("raffle-speed")));
     }
 
     public function rewardPlayer(Player $player, string $reward, WhatCrate $whatCrate) {
@@ -132,28 +137,30 @@ class Main extends PluginBase {
     }
 
     public function getKeysOfPlayer(Player $player, string $key) {
-        $keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
-        return $keyDB->getNested(strtolower($player->getName()).".".$key);
+        //$keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
+        return $this->keyDB->getNested(strtolower($player->getName()).".".$key);
     }
 
     public function addKeysToPlayer(Player $player, string $key, int $amount) {
-        $keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
+       // $keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
         $playername = strtolower($player->getName());
-        if(empty($keyDB->getNested($playername.".".$key))) {
-            $keyDB->setNested($playername . "." . $key, $amount);
+        if(empty($this->keyDB->getNested($playername.".".$key))) {
+            $this->keyDB->setNested($playername . "." . $key, $amount);
         } else {
-            $keyDB->setNested($playername . "." . $key, (int) ($keyDB->getNested($playername.".".$key) + $amount));
+            $this->keyDB->setNested($playername . "." . $key, (int) ($this->keyDB->getNested($playername.".".$key) + $amount));
         }
+        $this->keyDB->save();
     }
 
     public function removeKeysOfPlayer(Player $player, string $key, int $amount) {
-        $keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
+        //$keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
         $playername = strtolower($player->getName());
-        if(empty($keyDB->getNested($playername.".".$key))) {
-            return;
-        } else {
-            $keyDB->setNested($playername . "." . $key, (int) ($keyDB->getNested($playername.".".$key) - $amount));
-        }
+        //if(empty($keyDB->getNested($playername.".".$key))) {
+        //    return;
+        //} else {
+        $this->keyDB->setNested($playername . "." . $key, (int) ($this->keyDB->getNested($playername.".".$key) - $amount));
+        $this->keyDB->save();
+        //}
     }
 
     public function reloadWhatCrates(Player $player)

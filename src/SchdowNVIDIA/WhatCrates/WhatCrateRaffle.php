@@ -20,8 +20,11 @@ declare(strict_types = 1);
 
 namespace SchdowNVIDIA\WhatCrates;
 
+use pocketmine\level\particle\RedstoneParticle;
 use pocketmine\level\sound\BlazeShootSound;
 use pocketmine\level\sound\ClickSound;
+use pocketmine\level\sound\Sound;
+use pocketmine\math\Vector3;
 use pocketmine\Player;
 use pocketmine\scheduler\Task;
 
@@ -33,6 +36,7 @@ class WhatCrateRaffle extends Task {
     private $player;
     private $rewards;
     private $currentReward;
+    private $lastRaffleNumber;
 
     public function __construct(Main $plugin, Player $player, int $spinningTimes, WhatCrate $whatCrate)
     {
@@ -42,16 +46,30 @@ class WhatCrateRaffle extends Task {
         $this->player = $player;
         $this->rewards = $whatCrate->getRewards();
         $this->currentReward = "Loading...";
+        $this->lastRaffleNumber = -100;
     }
 
     public function onRun(int $currentTick)
     {
         $this->spinningTimes--;
         if($this->spinningTimes >= 0) {
-            $this->currentReward = array_rand($this->rewards);
-            $this->player->sendMessage("§7".$this->rewards[$this->currentReward]);
+            $raffleNumber = array_rand($this->rewards);
+            while ($raffleNumber === $this->lastRaffleNumber) {
+                $raffleNumber = array_rand($this->rewards);
+            }
+            $this->lastRaffleNumber = $raffleNumber;
+            $this->currentReward = $raffleNumber;
+            //$this->player->sendMessage("§7".$this->rewards[$this->currentReward]);
+            $splittedReward = explode(":", $this->rewards[$this->currentReward]);
+            $this->player->getLevel()->addSound(new ClickSound($this->whatCrate->getVector3()));
+            $this->whatCrate->getFloatingText()->setText($splittedReward[1]);
+            $this->plugin->sendFloatingText($this->player);
+           // $this->player->level->addParticle(new RedstoneParticle(new Vector3($th), 1));
         } else {
-            $this->player->getLevel()->addSound(new BlazeShootSound($this->player->asVector3()));
+
+            $this->whatCrate->getFloatingText()->setText("");
+            $this->plugin->sendFloatingText($this->player);
+            $this->player->getLevel()->addSound(new BlazeShootSound($this->whatCrate->getVector3()));
             $this->plugin->rewardPlayer($this->player, $this->rewards[$this->currentReward], $this->whatCrate);
             //$this->player->sendMessage("You've won: " . $this->rewards[$this->currentReward]);
             $this->whatCrate->setOpen(false);
