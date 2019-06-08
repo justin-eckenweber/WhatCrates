@@ -103,14 +103,14 @@ class Main extends PluginBase {
 
     public function WhatCrateRaffle(WhatCrate $whatCrate, Player $player) {
         if($whatCrate->isOpen()) {
-            return $player->sendMessage("§cSomeone is opening this WhatCrate already!");
+            return $player->sendMessage("§cSomeone is opening this Crate already!");
         }
 
         $whatCrate->setOpen(true);
         $keys = $this->getKeysOfPlayer($player, $whatCrate->getKey());
         if($keys <= 0) {
             $whatCrate->setOpen(false);
-            return $player->sendMessage("§cYou don't have a key for this WhatCrate.");
+            return $player->sendMessage("§cYou don't have a key for this Crate.");
         }
         $this->removeKeysOfPlayer($player, $whatCrate->getKey(), 1);
         $this->getScheduler()->scheduleRepeatingTask(new WhatCrateRaffle($this, $player, intval($this->getConfig()->get("spinning-times")), $whatCrate), intval($this->getConfig()->get("raffle-speed")));
