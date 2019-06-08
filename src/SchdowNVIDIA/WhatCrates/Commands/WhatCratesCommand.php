@@ -36,6 +36,13 @@ class WhatCratesCommand extends Command {
         $this->plugin = $plugin;
     }
 
+    private function replaceCommandPlaceholders(string $toReplace, Player $player, $amount, $type) {
+        $toReplace = str_replace("{USERNAME}", $player->getName(), $toReplace);
+        $toReplace = str_replace("{AMOUNT}", $amount, $toReplace);
+        $toReplace = str_replace("{TYPE}", $type, $toReplace);
+        return $toReplace;
+    }
+
     public function execute(CommandSender $sender, string $commandLabel, array $args)
     {
         if(!isset($args[0])) {
@@ -69,8 +76,8 @@ class WhatCratesCommand extends Command {
                         $pplayer = $this->plugin->getServer()->getPlayer($args[2]);
                         $this->plugin->addKeysToPlayer($pplayer, $type, intval($amount));
                         $this->plugin->sendFloatingText($pplayer);
-                        $pplayer->sendMessage("You've received x$amount $type Keys.");
-                        $sender->sendMessage("You gave ".$pplayer->getName()." x$amount $type Keys.");
+                        $pplayer->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get("you-received-keys"), $pplayer, $amount, $type));
+                        $sender->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get('you-gave-keys'), $pplayer, $amount, $type));
                     }
                 } else if ($args[1] === "remove") {
                     return true;

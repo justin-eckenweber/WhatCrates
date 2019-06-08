@@ -1,0 +1,16 @@
+# WhatCrates messages config
+# Do. Not. Change. Version!
+version: 0
+
+# Error messages
+dont-have-key: "§cYou don't have a key for this Crate."
+already-open: "§cSomeone is opening this Crate already!"
+
+# Reward message
+# Placeholder: {REWARD}
+you-won: "Hooray! you've won: §b{REWARD}§f!"
+
+# Command message
+# Placeholders: {USERNAME}, {AMOUNT}, {TYPE}
+you-gave-keys: "You gave {USERNAME} x{AMOUNT} {TYPE} keys."
+you-received-keys: "You received x{AMOUNT} {TYPE} keys."

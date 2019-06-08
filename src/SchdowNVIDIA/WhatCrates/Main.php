@@ -48,11 +48,13 @@ class Main extends PluginBase {
         @mkdir($this->getDataFolder());
         $this->saveResource("whatcrates.yml");
         $this->saveResource("keys.yml");
+        $this->saveResource("messages.yml");
         $this->saveDefaultConfig();
         $this->initWhatCrates();
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
         $this->getServer()->getCommandMap()->register("whatcrates", new WhatCratesCommand($this));
         $this->keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
+        $this->messages = new Config($this->getDataFolder()."messages.yml", Config::YAML);
     }
 
     public function sendFloatingText(Player $player) {
@@ -103,14 +105,14 @@ class Main extends PluginBase {
 
     public function WhatCrateRaffle(WhatCrate $whatCrate, Player $player) {
         if($whatCrate->isOpen()) {
-            return $player->sendMessage("§cSomeone is opening this WhatCrate already!");
+            return $player->sendMessage($this->messages->get('already-open'));
         }
 
         $whatCrate->setOpen(true);
         $keys = $this->getKeysOfPlayer($player, $whatCrate->getKey());
         if($keys <= 0) {
             $whatCrate->setOpen(false);
-            return $player->sendMessage("§cYou don't have a key for this WhatCrate.");
+            return $player->sendMessage($this->messages->get('dont-have-key'));
         }
         $this->removeKeysOfPlayer($player, $whatCrate->getKey(), 1);
         $this->getScheduler()->scheduleRepeatingTask(new WhatCrateRaffle($this, $player, intval($this->getConfig()->get("spinning-times")), $whatCrate), intval($this->getConfig()->get("raffle-speed")));
@@ -120,12 +122,12 @@ class Main extends PluginBase {
         $rwd = explode(":", $reward);
         switch ($rwd[0]) {
             case "cmd":
-                $player->sendMessage("§fHooray! You've won: §b" . $rwd[1] . "§f!");
-                $this->getServer()->dispatchCommand(new ConsoleCommandSender(), $this->replaceRewardPlaceholders($rwd[2], $player, $whatCrate));
+                $player->sendMessage($this->replaceMessagePlaceholders($this->messages->get('you-won'), $rwd[1]));
+                $this->getServer()->dispatchCommand(new ConsoleCommandSender(), $this->replaceCommandPlaceholders($rwd[2], $player, $whatCrate));
                 break;
 
             case "item":
-                $player->sendMessage("§fHooray! You've won: §b" . $rwd[1] . "§f!");
+                $player->sendMessage($this->replaceMessagePlaceholders($this->messages->get('you-won'), $rwd[1]));
                 $player->getInventory()->addItem(Item::get(intval($rwd[2]), intval($rwd[3]), intval($rwd[4])));
                 break;
 
@@ -134,11 +136,16 @@ class Main extends PluginBase {
                 break;
         }
     }
-
-    public function replaceRewardPlaceholders(string $string, Player $player, WhatCrate $whatCrate) {
+    // All placeholder replacers
+    public function replaceCommandPlaceholders(string $string, Player $player, WhatCrate $whatCrate) {
         $string = str_replace("{USERNAME}", $player->getName(), $string);
         $string = str_replace("{CRATE}", $whatCrate->getName(), $string);
         return $string;
+    }
+
+    public function replaceMessagePlaceholders(string $toReplace, string $reward) {
+        $toReplace = str_replace("{REWARD}", $reward, $toReplace);
+        return $toReplace;
     }
 
     public function getKeysOfPlayer(Player $player, string $key) {
