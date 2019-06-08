@@ -103,7 +103,7 @@ class Main extends PluginBase {
 
     public function WhatCrateRaffle(WhatCrate $whatCrate, Player $player) {
         if($whatCrate->isOpen()) {
-            return $player->sendMessage("§cSomeone is opening this WhatCrate already!");
+            return $player->sendMessage("§cSomeone is opening this Crate already!");
         }
 
         $whatCrate->setOpen(true);
