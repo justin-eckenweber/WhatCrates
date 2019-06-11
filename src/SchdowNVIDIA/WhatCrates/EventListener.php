@@ -21,9 +21,12 @@ declare(strict_types = 1);
 namespace SchdowNVIDIA\WhatCrates;
 
 use pocketmine\block\Block;
+use pocketmine\event\entity\EntityLevelChangeEvent;
 use pocketmine\event\Listener;
 use pocketmine\event\player\PlayerInteractEvent;
 use pocketmine\event\player\PlayerJoinEvent;
+use pocketmine\level\particle\FloatingTextParticle;
+use pocketmine\Player;
 
 class EventListener implements Listener {
 
@@ -35,7 +38,21 @@ class EventListener implements Listener {
     }
 
     public function onJoin(PlayerJoinEvent $event) {
-        $this->plugin->sendFloatingText($event->getPlayer());
+        //$this->plugin->sendFloatingText($event->getPlayer());
+        if(in_array($event->getPlayer()->getLevel()->getName(), $this->plugin->worldsWithWhatCrates)) {
+            $this->plugin->sendFloatingText($event->getPlayer(), false);
+        };
+    }
+
+    public function onLevelChange(EntityLevelChangeEvent $event) {
+        $player = $event->getEntity();
+        if($player instanceof Player) {
+            if(in_array($event->getTarget()->getName(), $this->plugin->worldsWithWhatCrates)) {
+                $this->plugin->sendFloatingText($player, false);
+            } else {
+                $this->plugin->sendFloatingText($player, true);
+            }
+        }
     }
 
     public function onInteract(PlayerInteractEvent $event)

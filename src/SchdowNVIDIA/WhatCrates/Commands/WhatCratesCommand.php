@@ -75,7 +75,9 @@ class WhatCratesCommand extends Command {
                     if($this->plugin->getServer()->getPlayer($player)) {
                         $pplayer = $this->plugin->getServer()->getPlayer($args[2]);
                         $this->plugin->addKeysToPlayer($pplayer, $type, intval($amount));
-                        $this->plugin->sendFloatingText($pplayer);
+                        if(in_array($pplayer->getLevel()->getName(), $this->plugin->worldsWithWhatCrates)) {
+                            $this->plugin->sendFloatingText($pplayer, false);
+                        }
                         $pplayer->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get("you-received-keys"), $pplayer, $amount, $type));
                         $sender->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get('you-gave-keys'), $pplayer, $amount, $type));
                     }
@@ -84,6 +86,20 @@ class WhatCratesCommand extends Command {
                 } else {
                     $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
                 }
+                break;
+            case "keyall":
+                if(!isset($args[1])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates keyall [type] [amount]");
+                if(!isset($args[2])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates keyall [type] [amount]");
+
+                foreach ($this->plugin->getServer()->getOnlinePlayers() as $onlinePlayer) {
+                    $this->plugin->addKeysToPlayer($onlinePlayer, $args[1], intval($args[2]));
+                    $onlinePlayer->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get("you-received-keys"), $onlinePlayer, $args[2], $args[1]));
+                    if(in_array($onlinePlayer->getLevel()->getName(), $this->plugin->worldsWithWhatCrates)) {
+                        $this->plugin->sendFloatingText($onlinePlayer, false);
+                    }
+                }
+                $sender->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get("you-keyall"), $sender, $args[2], $args[1]));
+
                 break;
             default:
 

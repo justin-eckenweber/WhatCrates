@@ -59,19 +59,16 @@ class WhatCrateRaffle extends Task {
             }
             $this->lastRaffleNumber = $raffleNumber;
             $this->currentReward = $raffleNumber;
-            //$this->player->sendMessage("§7".$this->rewards[$this->currentReward]);
             $splittedReward = explode(":", $this->rewards[$this->currentReward]);
             $this->player->getLevel()->addSound(new ClickSound($this->whatCrate->getVector3()));
             $this->whatCrate->getFloatingText()->setText($splittedReward[1]);
-            $this->plugin->sendFloatingText($this->player);
-           // $this->player->level->addParticle(new RedstoneParticle(new Vector3($th), 1));
+            $this->plugin->sendFloatingText($this->player, false);
         } else {
 
             $this->whatCrate->getFloatingText()->setText("");
-            $this->plugin->sendFloatingText($this->player);
+            $this->plugin->sendFloatingText($this->player, false);
             $this->player->getLevel()->addSound(new BlazeShootSound($this->whatCrate->getVector3()));
             $this->plugin->rewardPlayer($this->player, $this->rewards[$this->currentReward], $this->whatCrate);
-            //$this->player->sendMessage("You've won: " . $this->rewards[$this->currentReward]);
             $this->whatCrate->setOpen(false);
             $this->getHandler()->cancel();
         }

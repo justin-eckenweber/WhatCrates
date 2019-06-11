@@ -43,6 +43,11 @@ class Main extends PluginBase {
     public $worldsWithWhatCrates = array();
     public $existingKeys = array();
 
+    // Current Config Versions
+    public $cfgVersion = 0;
+    public $messagesVersion = 1;
+    public $whatCratesVersion = 0;
+
     public function onEnable()
     {
         @mkdir($this->getDataFolder());
@@ -50,6 +55,7 @@ class Main extends PluginBase {
         $this->saveResource("keys.yml");
         $this->saveResource("messages.yml");
         $this->saveDefaultConfig();
+        $this->cfgChecker();
         $this->initWhatCrates();
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
         $this->getServer()->getCommandMap()->register("whatcrates", new WhatCratesCommand($this));
@@ -57,7 +63,28 @@ class Main extends PluginBase {
         $this->messages = new Config($this->getDataFolder()."messages.yml", Config::YAML);
     }
 
-    public function sendFloatingText(Player $player) {
+    public function cfgChecker () {
+        // config.yml
+        if(($this->getConfig()->get("version")) < $this->cfgVersion || !($this->getConfig()->exists("version"))) {
+            $this->getLogger()->critical("Your config.yml is outdated.");
+            $this->getLogger()->info("Loading new config...");
+            rename($this->getDataFolder() . "config.yml", $this->getDataFolder() . "old_config.yml");
+            $this->saveResource("config.yml");
+            $this->getLogger()->notice("Done: The old config has been saved as \"old_config.yml\" and the new config has been successfully loaded.");
+        };
+        // messages.yml
+        $messages = new Config($this->getDataFolder()."messages.yml", Config::YAML);
+        if(($messages->get("version")) < $this->messagesVersion || !($messages->exists("version"))) {
+            $this->getLogger()->critical("Your messages.yml is outdated.");
+            $this->getLogger()->info("Loading new messages...");
+            rename($this->getDataFolder() . "messages.yml", $this->getDataFolder() . "old_messages.yml");
+            $this->saveResource("messages.yml");
+            $this->getLogger()->notice("Done: The old messages has been saved as \"old_messages.yml\" and the new messages has been successfully loaded.");
+        };
+        // Currently don't need to check whatCratesVersion. there will be no update for a long time.
+    }
+
+    public function sendFloatingText(Player $player, bool $invisible) {
         foreach ($this->crates as $whatcrate) {
             if($whatcrate instanceof WhatCrate) {
                 $text = $whatcrate->getFloatingText();
@@ -67,9 +94,9 @@ class Main extends PluginBase {
                 } else {
                     $text->setTitle($whatcrate->getName());
                 }
+                $text->setInvisible($invisible);
                 if($text instanceof FloatingTextParticle) {
                     foreach ($text->encode() as $pckg) {
-                        $text->setInvisible(false);
                         $player->dataPacket($pckg);
                     }
                 }
@@ -178,11 +205,14 @@ class Main extends PluginBase {
     public function reloadWhatCrates(Player $player)
     {
         $player->sendMessage("--- Reloading WhatCrates ---");
-        $player->sendMessage("Clearing saved WhatCrates...");
+        $player->sendMessage("Reloading Crates...");
         $this->crates = array();
         $this->worldsWithWhatCrates = array();
-        $player->sendMessage("Loading all WhatCrates...");
         $this->initWhatCrates();
+        $player->sendMessage("Reloading key file...");
+        $this->keyDB->reload();
+        $player->sendMessage("Reloading config...");
+        $this->getConfig()->reload();
         $player->sendMessage("Done!");
     }
 
