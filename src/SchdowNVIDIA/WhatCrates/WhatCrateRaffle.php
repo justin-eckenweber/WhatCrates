@@ -51,6 +51,16 @@ class WhatCrateRaffle extends Task {
 
     public function onRun(int $currentTick)
     {
+        if(!$this->player->isOnline()) {
+            $this->whatCrate->setOpen(false);
+            $this->getHandler()->cancel();
+            return;
+        }
+        if($this->whatCrate === null) {
+            $this->whatCrate->setOpen(false);
+            $this->getHandler()->cancel();
+            return;
+        }
         $this->spinningTimes--;
         if($this->spinningTimes >= 0) {
             $raffleNumber = array_rand($this->rewards);
