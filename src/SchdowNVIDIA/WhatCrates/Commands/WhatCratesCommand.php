@@ -57,21 +57,23 @@ class WhatCratesCommand extends Command {
               if ($sender->hasPermission("whatcrates")) {
                   $this->plugin->openWhatCratesMenu($sender);
               } else {
-                  $sender->sendMessage("§cYou're not allowed to use that!");
+                  $sender->sendMessage($this->plugin->messages->get('no-permission'));
               }
               } else {
                   $sender->sendMessage("§cYou can use the UI only in-game!");
               }
         break;
             case "key":
-                if(!isset($args[1])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
+                if(!isset($args[1])) return $sender->sendMessage($this->plugin->messages->get('key-wrong-syntax'));
                 if($args[1] === "give") {
-                    if(!isset($args[2])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
-                    if(!isset($args[3])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
-                    if(!isset($args[4])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
+                    if(!isset($args[2])) return $sender->sendMessage($this->plugin->messages->get('key-wrong-syntax'));
+                    if(!isset($args[3])) return $sender->sendMessage($this->plugin->messages->get('key-wrong-syntax'));
+                    if(!isset($args[4])) return $sender->sendMessage($this->plugin->messages->get('key-wrong-syntax'));
                     $player = $args[2];
                     $type = $args[3];
                     $amount = $args[4];
+                    if(!in_array($type, $this->plugin->existingKeys)) return $sender->sendMessage($this->plugin->messages->get("invalid-key-type"));
+
                     if($this->plugin->getServer()->getPlayer($player)) {
                         $pplayer = $this->plugin->getServer()->getPlayer($args[2]);
                         $this->plugin->addKeysToPlayer($pplayer, $type, intval($amount));
@@ -83,13 +85,19 @@ class WhatCratesCommand extends Command {
                     }
                 } else if ($args[1] === "remove") {
                     return true;
+                } else if ($args[1] === "list"){
+                    $sender->sendMessage($this->plugin->messages->get('key-list') . implode(", ", $this->plugin->existingKeys));
                 } else {
-                    $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]");
+                    $sender->sendMessage($this->plugin->messages->get('key-wrong-syntax'));
                 }
                 break;
             case "keyall":
                 if(!isset($args[1])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates keyall [type] [amount]");
                 if(!isset($args[2])) return $sender->sendMessage("§cWrong Syntax! Use: §f/whatcrates keyall [type] [amount]");
+
+                if(!$sender instanceof Player) return $sender->sendMessage("Please use that in-game");
+
+                if(!in_array($args[1], $this->plugin->existingKeys)) return $sender->sendMessage($this->plugin->messages->get("invalid-key-type"));
 
                 foreach ($this->plugin->getServer()->getOnlinePlayers() as $onlinePlayer) {
                     $this->plugin->addKeysToPlayer($onlinePlayer, $args[1], intval($args[2]));
@@ -98,7 +106,7 @@ class WhatCratesCommand extends Command {
                         $this->plugin->sendFloatingText($onlinePlayer, false);
                     }
                 }
-                $sender->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get("you-keyall"), $sender, $args[2], $args[1]));
+                    $sender->sendMessage($this->replaceCommandPlaceholders($this->plugin->messages->get("you-keyall"), $sender, $args[2], $args[1]));
 
                 break;
             default:

@@ -1,17 +1,24 @@
 # WhatCrates messages config
 # Do. Not. Change. Version!
-version: 1
+version: 2
 
 # Error messages
 dont-have-key: "§cYou don't have a key for this Crate."
 already-open: "§cSomeone is opening this Crate already!"
+invalid-key-type: "§cInvalid key type! Use /whatcrates key list to show all available keys."
+couldnt-create-whatcrate: "§cCouldn't create WhatCrate! missing argument: "
 
 # Reward message
 # Placeholder: {REWARD}
 you-won: "Hooray! you've won: §b{REWARD}§f!"
 
-# Command message
+# Key command message
 # Placeholders: {USERNAME}, {AMOUNT}, {TYPE}
 you-gave-keys: "You gave {USERNAME} x{AMOUNT} {TYPE} keys."
 you-received-keys: "You received x{AMOUNT} {TYPE} keys."
 you-keyall: "You gave everyone x{AMOUNT} {TYPE} keys."
+key-wrong-syntax: "§cWrong Syntax! Use: §f/whatcrates key give [player] [type] [amount]"
+
+# Other messages
+key-list: "All available keys: "
+no-permission: "§cYou do not have permission to use that."

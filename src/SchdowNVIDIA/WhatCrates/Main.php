@@ -21,7 +21,11 @@ declare(strict_types = 1);
 
 namespace SchdowNVIDIA\WhatCrates;
 
+use Fludixx\BuildFFA\breakSandstone;
+use jojoe77777\FormAPI\CustomForm;
 use pocketmine\command\ConsoleCommandSender;
+use pocketmine\event\block\BlockBreakEvent;
+use pocketmine\event\Listener;
 use pocketmine\item\Item;
 use pocketmine\level\particle\FloatingTextParticle;
 use pocketmine\level\particle\LavaParticle;
@@ -37,15 +41,17 @@ use pocketmine\utils\TextFormat;
 use SchdowNVIDIA\WhatCrates\Commands\WhatCratesCommand;
 use jojoe77777\FormAPI\SimpleForm;
 
-class Main extends PluginBase {
+class Main extends PluginBase implements Listener {
 
     public $crates = array();
     public $worldsWithWhatCrates = array();
     public $existingKeys = array();
 
+    public $playersInCrateCreateMode = array();
+
     // Current Config Versions
     public $cfgVersion = 0;
-    public $messagesVersion = 1;
+    public $messagesVersion = 2;
     public $whatCratesVersion = 0;
 
     public function onEnable()
@@ -58,6 +64,7 @@ class Main extends PluginBase {
         $this->cfgChecker();
         $this->initWhatCrates();
         $this->getServer()->getPluginManager()->registerEvents(new EventListener($this), $this);
+        $this->getServer()->getPluginManager()->registerEvents($this, $this);
         $this->getServer()->getCommandMap()->register("whatcrates", new WhatCratesCommand($this));
         $this->keyDB = new Config($this->getDataFolder()."keys.yml", Config::YAML);
         $this->messages = new Config($this->getDataFolder()."messages.yml", Config::YAML);
@@ -216,11 +223,112 @@ class Main extends PluginBase {
         $player->sendMessage("Done!");
     }
 
+    public function onBreak(BlockBreakEvent $event) {
+        $player = $event->getPlayer();
+        if(in_array($player->getName(), $this->playersInCrateCreateMode)) {
+            $event->setCancelled(true);
+            $index = array_search($player->getName(), $this->playersInCrateCreateMode);
+            if($index !== FALSE){
+                unset($this->playersInCrateCreateMode[$index]);
+            }
+            unset($this->playersInCrateCreateMode[$player->getName()]);
+            $block = $event->getBlock();
+            if($event->getPlayer() instanceof Player) {
+                $this->openCreateCrateUI($event->getPlayer(), $block->getX(), $block->getY(), $block->getZ(), $block->getLevel()->getName());
+            }
+        }
+    }
+
+    public function openCreateCrateUI(Player $player, float $x, float $y, float $z, string $world) {
+        $form = new CustomForm(function (Player $player, array $data = null) {
+
+            if($data != null) {
+
+                if (!isset($data[0]) || $data[0] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."name");
+                if (!isset($data[1]) || $data[1] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."key");
+                if (!isset($data[2]) || $data[2] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."world");
+                if (!isset($data[3]) || $data[3] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."x");
+                if (!isset($data[4]) || $data[4] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."y");
+                if (!isset($data[5]) || $data[5] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."z");
+                if (!isset($data[6]) || $data[6] === "") return $player->sendMessage($this->messages->get('couldnt-create-whatcrate')."rewards");
+
+                $name = $data[0];
+                $key = $data[1];
+                $world = $data[2];
+                $x = (int)$data[3];
+                $y = (int)$data[4];
+                $z = (int)$data[5];
+                $rewards = explode(",", $data[6]);
+
+                $whatcrateConfig = new Config($this->getDataFolder() . "whatcrates.yml", Config::YAML);
+                $whatcrateConfig->setNested("whatcrates.$name.world", $world);
+                $whatcrateConfig->setNested("whatcrates.$name.x", $x);
+                $whatcrateConfig->setNested("whatcrates.$name.y", $y);
+                $whatcrateConfig->setNested("whatcrates.$name.z", $z);
+                $whatcrateConfig->setNested("whatcrates.$name.key", $key);
+                $whatcrateConfig->setNested("whatcrates.$name.rewards", $rewards);
+
+                $whatcrateConfig->save();
+                $whatcrateConfig->reload();
+                $player->sendMessage("Crate created! Please reload WhatCrates at /whatcrates ui");
+            }
+
+        });
+
+        $form->addInput("Crate Name", "My Cool Crate");
+        $form->addInput("Key", "coolCrateKey");
+        $form->addInput("World", "world", $world);
+        $form->addInput("X", "$x", "$x");
+        $form->addInput("Y", "$y", "$y");
+        $form->addInput("Z", "$z", "$z");
+        $form->addInput("Rewards (seperated by ,)", "cmd:First Win:say 1,cmd:Second Win:say 2", "cmd:First Win:say 1,cmd:Second Win:say 2");
+        $form->setTitle("Create Crate");
+        $form->sendToPlayer($player);
+        return $form;
+
+    }
+
+    public function crateCreateMode(Player $player) {
+        if(!array_key_exists($player->getName(), $this->playersInCrateCreateMode)) {
+            array_push($this->playersInCrateCreateMode, $player->getName());
+            $player->sendMessage("Break a block to define the position of your new Crate.");
+        } else {
+            $player->sendMessage("§cYou're already in create-mode!");
+        }
+    }
+
+    public function openCratesMenu(Player $player) {
+        $form = new SimpleForm(function (Player $player, int $data = null) {
+            if($data != null) {
+                if($data === 1) return;
+
+                $player->sendMessage("§cThis feature isn't supported yet!");
+            }
+        });
+
+        $form->setTitle("Crates");
+        $form->setContent("This UI is still WIP.");
+        $form->addButton("§cClose");
+        foreach ($this->crates as $whatcrate) {
+            if($whatcrate instanceof WhatCrate) {
+                $form->addButton($whatcrate->getName());
+            }
+        }
+        $form->sendToPlayer($player);
+        return $form;
+    }
+
     public function openWhatCratesMenu(Player $player) {
         $form = new SimpleForm(function (Player $player, int $data = null) {
             if($data != null) {
                 switch ($data) {
                     case 1:
+                        $this->openCratesMenu($player);
+                        break;
+                    case 2:
+                        $this->crateCreateMode($player);
+                        break;
+                    case 3:
                         $this->reloadWhatCrates($player);
                         break;
                 }
@@ -230,6 +338,8 @@ class Main extends PluginBase {
         $form->setTitle("WhatCrates");
         $form->setContent("This UI is still WIP.");
         $form->addButton("§cClose");
+        $form->addButton("Crates");
+        $form->addButton("Create Crate");
         $form->addButton("Reload WhatCrates");
         $form->sendToPlayer($player);
         return $form;
