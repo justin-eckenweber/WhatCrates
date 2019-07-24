@@ -24,7 +24,7 @@ whatcrates - gives permission to all whatcrates commands.
 
 # Thanks to Zap-Hosting & JetBrains!
 ## Zap-Hosting
-Zap-Hosting.com is company hosting Gameservers, VPS, Rootservers and much more!
+Zap-Hosting.com is a company hosting Gameservers, VPS, Rootservers and much more!
 
 They gave me a Server for testing my open source projects!
 
