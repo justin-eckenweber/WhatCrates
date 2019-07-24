@@ -21,3 +21,17 @@ Open Crates and win prizes!
 
 # Permissions
 whatcrates - gives permission to all whatcrates commands.
+
+# Thanks to Zap-Hosting & JetBrains!
+## Zap-Hosting
+Zap-Hosting.com is company hosting Gameservers, VPS, Rootservers and much more!
+
+They gave me a Server for testing my open source projects!
+
+You still need a cheap & good VPS or a strong Rootserver? Then follow the links below:
+(You can also use my code: Schdow-4273 to get a 10% discount for every product for EVER.)
+
+[VPS](https://zap-hosting.com/schdowvserver)
+[Rootserver](https://zap-hosting.com/schdowroot)
+## JetBrains
+This plugin was made with JetBrains Software.
